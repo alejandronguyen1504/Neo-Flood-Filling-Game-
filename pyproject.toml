@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neo-flood-fill"
+version = "2.0.0"
+description = "Interactive Flood Fill & Pathfinding Algorithm Studio with benchmarks and Pygame/WebAssembly visualizer."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pygame>=2.6.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "matplotlib>=3.9",
+    "ipykernel>=6.29",
+    "pygbag>=0.9",
+]
+
+[project.scripts]
+neo-flood-fill = "neo_flood_fill.console_demo:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"
