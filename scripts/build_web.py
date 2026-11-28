@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_DIR = ROOT / "build"
-STAGE_DIR = BUILD_DIR / "pygbag_stage"
+STAGE_DIR = BUILD_DIR / "neo_flood_fill"
 WEB_OUT = BUILD_DIR / "web"
 
 
@@ -20,7 +20,9 @@ def build_web_bundle() -> Path:
     if WEB_OUT.exists():
         shutil.rmtree(WEB_OUT)
 
-    stage_pkg = STAGE_DIR / "src" / "neo_flood_fill"
+    # Place package directly next to main.py so Emscripten WASM imports work
+    # without depending on Path(__file__) or src/ path manipulation.
+    stage_pkg = STAGE_DIR / "neo_flood_fill"
     stage_pkg.mkdir(parents=True, exist_ok=True)
 
     shutil.copy2(ROOT / "main.py", STAGE_DIR / "main.py")
@@ -32,6 +34,8 @@ def build_web_bundle() -> Path:
         "-m",
         "pygbag",
         "--build",
+        "--ume_block",
+        "0",
         "--app_name",
         "neo-flood-fill",
         "--title",

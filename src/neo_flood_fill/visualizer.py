@@ -97,6 +97,8 @@ def _blend_rgb(base: RGBColor, tint: RGBColor, alpha: float) -> RGBColor:
 
 
 def _load_ui_font(size: int, bold: bool = False) -> pygame.font.Font:
+    if _is_wasm():
+        return pygame.font.Font(None, size + 4)
     try:
         return pygame.font.SysFont(
             "inter,segoeui,sfprotext,helveticaneue,dejavusans,arial",
@@ -104,10 +106,12 @@ def _load_ui_font(size: int, bold: bool = False) -> pygame.font.Font:
             bold=bold,
         )
     except Exception:
-        return pygame.font.Font(None, size)
+        return pygame.font.Font(None, size + 4)
 
 
 def _load_mono_font(size: int, bold: bool = False) -> pygame.font.Font:
+    if _is_wasm():
+        return pygame.font.Font(None, size + 3)
     try:
         return pygame.font.SysFont(
             "jetbrainsmono,menlo,consolas,dejavusansmono,couriernew",
@@ -115,7 +119,7 @@ def _load_mono_font(size: int, bold: bool = False) -> pygame.font.Font:
             bold=bold,
         )
     except Exception:
-        return pygame.font.Font(None, size)
+        return pygame.font.Font(None, size + 3)
 
 
 class StudioRenderer:
