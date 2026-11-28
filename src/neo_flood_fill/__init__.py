@@ -52,6 +52,15 @@ from .grid import (
     set_cell,
 )
 
+from .effects import (
+    MotionEngine,
+    clamp01,
+    ease_in_out_sine,
+    ease_out_back,
+    ease_out_cubic,
+    exp_lerp,
+    lerp_rgb,
+)
 from .studio_state import (
     DEFAULT_THEME_COLORS,
     RunRecord,
@@ -71,6 +80,7 @@ __all__ = [
     "FLOOD_FILL_ALGORITHMS",
     "GRID_PRESETS",
     "Grid",
+    "MotionEngine",
     "OVERLAY_END",
     "OVERLAY_FRONTIER",
     "OVERLAY_NONE",

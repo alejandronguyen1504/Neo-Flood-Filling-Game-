@@ -19,7 +19,7 @@ import math
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Callable, Iterator, Literal, Sequence
+from typing import Callable, Iterator, Literal, Optional, Sequence, Union
 
 from .grid import Coord, Grid, WALL, is_valid_cell
 
@@ -933,19 +933,19 @@ def pathfind_astar(
 # ===========================================================================
 
 FloodFillFn = Callable[
-    [Grid | list[list[int]], int, int, int | None, int, Connectivity],
+    [Union[Grid, list[list[int]]], int, int, Optional[int], int, Connectivity],
     AlgorithmMetrics,
 ]
 FloodFillStepsFn = Callable[
-    [Grid | list[list[int]], int, int, int | None, int, Connectivity],
+    [Union[Grid, list[list[int]]], int, int, Optional[int], int, Connectivity],
     Iterator[StepEvent],
 ]
 PathfindFn = Callable[
-    [Grid | list[list[int]], Coord, Coord, Connectivity, int],
+    [Union[Grid, list[list[int]]], Coord, Coord, Connectivity, int],
     tuple[list[Coord], AlgorithmMetrics],
 ]
 PathfindStepsFn = Callable[
-    [Grid | list[list[int]], Coord, Coord, Connectivity, int],
+    [Union[Grid, list[list[int]]], Coord, Coord, Connectivity, int],
     Iterator[StepEvent],
 ]
 

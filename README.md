@@ -5,7 +5,7 @@
 ![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)
 ![Pygame](https://img.shields.io/badge/Pygame-2.6.1-20c997)
 ![WebAssembly](https://img.shields.io/badge/WebAssembly-pygbag-6366f1)
-![Tests](https://img.shields.io/badge/pytest-79%20passed-22c55e)
+![Tests](https://img.shields.io/badge/pytest-84%20passed-22c55e)
 
 An interactive **Flood Fill & Pathfinding Algorithm Studio** built in Python & Pygame, compiled to **WebAssembly (`pygbag`)** for zero-install browser play, and paired with a scientific complexity benchmark suite and research notebook.
 
@@ -55,7 +55,7 @@ flowchart LR
     CLI --> ALGO
     NB["Neo_Flood_Filling.ipynb"] --> BENCH["benchmarks.py (Time, Space & Heap Suite)"]
     BENCH --> ALGO
-    TESTS["tests/ (79 pytest cases)"] --> GRID
+    TESTS["tests/ (84 pytest cases)"] --> GRID
     TESTS --> ALGO
     TESTS --> STATE
     TESTS --> BENCH
@@ -79,7 +79,7 @@ Neo-Flood-Filling-Game-/
 ├── scripts/
 │   ├── build_web.py                     # Stages pure-Python runtime into a ~31 KB pygbag WASM bundle
 │   └── generate_assets.py               # Reproducibly regenerates GIFs, screenshots & matplotlib charts
-├── tests/                               # 79 pytest unit, equivalence, complexity & headless UI tests
+├── tests/                               # 84 pytest unit, equivalence, motion & headless UI tests
 ├── docs/
 │   ├── NCT-NEO-FloodFill.pdf            # Original RMIT NEO Culture Tech project specification
 │   ├── Gantt Chart Flood fill research.pdf
@@ -149,10 +149,10 @@ python main.py --console --mode path --algo astar
 python main.py --console --mode fill --algo scanline
 python main.py --console --interactive
 
-# Run the full 79-test pytest suite
+# Run the full 84-test pytest suite
 pytest -v
 
-# Build the lightweight (~31 KB APK) WebAssembly bundle locally
+# Build the lightweight (~38 KB APK) WebAssembly bundle locally
 python scripts/build_web.py
 ```
 

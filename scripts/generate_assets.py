@@ -124,7 +124,9 @@ def generate_studio_visuals() -> None:
                 break
 
         renderer.hover_cell = (5, 8)
-        renderer.render(screen)
+        for _ in range(18):
+            renderer.render(screen, dt_ms=32.0)
+        ff_frames.append(_surface_to_pil(screen, gif_size))
         pygame.image.save(screen, str(ASSETS_DIR / "studio_flood_fill.png"))
         _save_gif(ff_frames, ASSETS_DIR / "demo_flood_fill.gif", duration_ms=65)
 
@@ -169,7 +171,9 @@ def generate_studio_visuals() -> None:
                 pf_frames.append(_surface_to_pil(screen, gif_size))
 
         pf_renderer.hover_cell = (10, 15)
-        pf_renderer.render(screen)
+        for _ in range(16):
+            pf_renderer.render(screen, dt_ms=42.0)
+            pf_frames.append(_surface_to_pil(screen, gif_size))
         pygame.image.save(screen, str(ASSETS_DIR / "studio_pathfinding.png"))
         _save_gif(pf_frames, ASSETS_DIR / "demo_pathfinding.gif", duration_ms=60)
     finally:
@@ -177,29 +181,29 @@ def generate_studio_visuals() -> None:
 
 
 def generate_benchmark_charts() -> None:
-    """Run controlled benchmarks and export high-DPI matplotlib comparison figures."""
+    """Run controlled benchmarks and export Prior Labs monochrome-styled figures."""
     plt.rcParams.update(
         {
-            "figure.facecolor": "#0d111a",
-            "axes.facecolor": "#161b27",
-            "axes.edgecolor": "#2e384d",
-            "axes.labelcolor": "#e2e8f0",
-            "xtick.color": "#94a3b8",
-            "ytick.color": "#94a3b8",
-            "text.color": "#f1f5f9",
-            "grid.color": "#263044",
+            "figure.facecolor": "#f7f8fa",
+            "axes.facecolor": "#ffffff",
+            "axes.edgecolor": "#dde2ec",
+            "axes.labelcolor": "#0b0e17",
+            "xtick.color": "#525c70",
+            "ytick.color": "#525c70",
+            "text.color": "#0b0e17",
+            "grid.color": "#e6eaf2",
             "grid.linestyle": "--",
-            "grid.alpha": 0.6,
-            "legend.facecolor": "#1d2434",
-            "legend.edgecolor": "#2e384d",
+            "grid.alpha": 0.85,
+            "legend.facecolor": "#ffffff",
+            "legend.edgecolor": "#dde2ec",
         }
     )
 
     algo_styles = {
-        "recursive_dfs": ("Recursive DFS", "#f43f5e", "o"),
-        "iterative_dfs": ("Iterative DFS", "#f97316", "s"),
-        "bfs": ("Queue BFS", "#38bdf8", "^"),
-        "scanline": ("Scanline", "#20c997", "D"),
+        "recursive_dfs": ("Recursive DFS", "#e11d48", "o"),
+        "iterative_dfs": ("Iterative DFS", "#ea580c", "s"),
+        "bfs": ("Queue BFS", "#4f46e5", "^"),
+        "scanline": ("Scanline", "#0b0e17", "D"),
     }
 
     # 1. Flood Fill Benchmark Chart (Open Grid scaling + Multi-Terrain Peak Space)
@@ -291,9 +295,9 @@ def generate_benchmark_charts() -> None:
         repeats=5,
     )
     pf_styles = {
-        "astar": ("A* (Manhattan)", "#20c997"),
-        "bfs": ("BFS", "#38bdf8"),
-        "dfs": ("DFS", "#f43f5e"),
+        "astar": ("A* (Manhattan)", "#0b0e17"),
+        "bfs": ("BFS", "#6366f1"),
+        "dfs": ("DFS", "#e11d48"),
     }
 
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.4), dpi=160)
@@ -328,7 +332,7 @@ def generate_benchmark_charts() -> None:
                 ha="center",
                 va="bottom",
                 fontsize=8,
-                color="#cbd5e1",
+                color="#334155",
             )
     ax.set_title("Cells Explored (Lower = More Efficient)", fontsize=11, fontweight="bold")
     ax.set_xticks(x_positions)
@@ -358,7 +362,7 @@ def generate_benchmark_charts() -> None:
                 ha="center",
                 va="bottom",
                 fontsize=8,
-                color="#cbd5e1",
+                color="#334155",
             )
     ax.set_title("Path Length Found (A* & BFS = Optimal)", fontsize=11, fontweight="bold")
     ax.set_xticks(x_positions)

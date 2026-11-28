@@ -46,13 +46,13 @@ PresetName = Literal["multi_room", "maze", "obstacles", "spiral"]
 PlaybackStatus = Literal["Ready", "Running", "Paused", "Done", "No Path", "Limit Hit"]
 
 DEFAULT_THEME_COLORS: dict[str, RGBColor] = {
-    "empty": (241, 245, 249),
-    "wall": (24, 30, 42),
-    "start": (34, 197, 94),
-    "end": (239, 68, 68),
-    "frontier": (56, 189, 248),
+    "empty": (14, 17, 26),
+    "wall": (228, 232, 242),
+    "start": (16, 185, 129),
+    "end": (244, 63, 94),
+    "frontier": (196, 181, 253),
     "visited": (99, 102, 241),
-    "path": (250, 204, 21),
+    "path": (139, 92, 246),
 }
 
 # Speed levels: (label, steps_per_tick, tick_interval_ms)
@@ -152,6 +152,7 @@ class StudioState:
         self._dragging_tool: ToolMode | None = None
         self._last_drag_cell: Coord | None = None
         self._preset_counter: int = 1
+        self._visual_events: list[tuple[str, int, int, int | None]] = []
 
         self.load_preset(preset, record_undo=False)
         self.set_alert(
@@ -203,6 +204,21 @@ class StudioState:
     def clear_alert(self) -> None:
         self.alert_message = ""
         self.alert_timer_ms = 0.0
+
+    def _emit_visual(
+        self, kind: str, row: int = -1, col: int = -1, color: int | None = None
+    ) -> None:
+        if len(self._visual_events) >= 600:
+            del self._visual_events[:200]
+        self._visual_events.append((kind, row, col, color))
+
+    def pop_visual_events(self) -> list[tuple[str, int, int, int | None]]:
+        """Drain queued visual events for the motion renderer."""
+        if not self._visual_events:
+            return []
+        events = self._visual_events[:]
+        self._visual_events.clear()
+        return events
 
     # ------------------------------------------------------------------
     # Mode, algorithm, connectivity & speed controls
@@ -354,12 +370,14 @@ class StudioState:
         self.grid.load_base(matrix, start=start, end=end)
         self.run_history.clear()
         self._reset_live_metrics()
+        self._emit_visual("clear")
         self.status = "Ready"
 
     def clear_search_overlay(self) -> None:
         self.stop_animation()
         self.grid.clear_search_overlay()
         self._reset_live_metrics()
+        self._emit_visual("clear")
         self.status = "Ready"
 
     def clear_regions(self) -> None:
@@ -367,6 +385,7 @@ class StudioState:
         self.grid.push_snapshot()
         self.grid.clear_regions()
         self._reset_live_metrics()
+        self._emit_visual("clear")
         self.status = "Ready"
 
     def reset_grid(self) -> None:
@@ -377,6 +396,7 @@ class StudioState:
         self.grid.set_end(self.grid.rows - 2, self.grid.cols - 2)
         self.run_history.clear()
         self._reset_live_metrics()
+        self._emit_visual("clear")
         self.status = "Ready"
         self.set_alert("Grid cleared.", "info", duration_ms=1800.0)
 
@@ -384,6 +404,7 @@ class StudioState:
         self.stop_animation()
         if self.grid.undo():
             self._reset_live_metrics()
+            self._emit_visual("clear")
             self.status = "Ready"
             self.set_alert("Undid last change.", "info", duration_ms=1600.0)
             return True
@@ -446,9 +467,13 @@ class StudioState:
             return
         if tool == "wall":
             if self.grid.start != (r, c) and self.grid.end != (r, c):
-                self.grid.set_base(r, c, WALL)
+                if self.grid.get_base(r, c) != WALL:
+                    self.grid.set_base(r, c, WALL)
+                    self._emit_visual("paint", r, c, WALL)
         elif tool == "erase":
-            self.grid.erase_cell(r, c)
+            if self.grid.get_base(r, c) != EMPTY or self.grid.get_overlay(r, c) != 0:
+                self.grid.erase_cell(r, c)
+                self._emit_visual("paint", r, c, EMPTY)
 
     # ------------------------------------------------------------------
     # Animation launch, pause, step, and tick
@@ -498,6 +523,7 @@ class StudioState:
         self.stop_animation()
         self.grid.clear_search_overlay()
         self._reset_live_metrics()
+        self._emit_visual("clear")
 
         label, _, steps_fn = PATHFINDING_ALGORITHMS[self.path_algo]
         self._generator = steps_fn(
@@ -602,17 +628,22 @@ class StudioState:
         if event.kind == "fill":
             self.live_visited += 1
             self.live_filled += 1
+            if event.row is not None and event.col is not None:
+                self._emit_visual("fill", event.row, event.col, event.color)
         elif event.kind == "frontier" and event.row is not None and event.col is not None:
             if self.grid.get_overlay(event.row, event.col) not in (OVERLAY_START, OVERLAY_END):
                 self.grid.set_overlay(event.row, event.col, OVERLAY_FRONTIER)
+                self._emit_visual("frontier", event.row, event.col)
         elif event.kind == "visit" and event.row is not None and event.col is not None:
             self.live_visited += 1
             if self.grid.get_overlay(event.row, event.col) not in (OVERLAY_START, OVERLAY_END):
                 self.grid.set_overlay(event.row, event.col, OVERLAY_VISITED)
+                self._emit_visual("visit", event.row, event.col)
         elif event.kind == "path" and event.row is not None and event.col is not None:
             self.live_path_length += 1
             if self.grid.get_overlay(event.row, event.col) not in (OVERLAY_START, OVERLAY_END):
                 self.grid.set_overlay(event.row, event.col, OVERLAY_PATH)
+            self._emit_visual("path", event.row, event.col)
         elif event.kind in ("done", "no_path"):
             self._finalize_run(event.kind, event.metrics)
             return False
