@@ -52,9 +52,18 @@ from .grid import (
     set_cell,
 )
 
+from .studio_state import (
+    DEFAULT_THEME_COLORS,
+    RunRecord,
+    SPEED_LEVELS,
+    StudioState,
+    bresenham_line,
+)
+
 __all__ = [
     "AlgorithmMetrics",
     "Connectivity",
+    "DEFAULT_THEME_COLORS",
     "DIRECTIONS_4",
     "DIRECTIONS_8",
     "EMPTY",
@@ -73,8 +82,12 @@ __all__ = [
     "PALETTE_START_ID",
     "PATHFINDING_ALGORITHMS",
     "PaletteEntry",
+    "RunRecord",
+    "SPEED_LEVELS",
     "StepEvent",
+    "StudioState",
     "WALL",
+    "bresenham_line",
     "create_grid",
     "flood_fill_bfs",
     "flood_fill_bfs_steps",
