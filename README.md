@@ -1,312 +1,188 @@
-# Neo-flood-fill
-# Flood Fill & BFS Pathfinding Visualizer
+# Neo Flood Fill — Interactive Algorithm Studio
 
-A Python research project implementing, testing, and visualizing two Flood Fill algorithms — **Recursive** and **Queue-based (BFS)** — with an interactive Pygame GUI for BFS pathfinding.
+[![CI](https://github.com/alejandronguyen1504/Neo-Flood-Filling-Game-/actions/workflows/ci.yml/badge.svg)](https://github.com/alejandronguyen1504/Neo-Flood-Filling-Game-/actions/workflows/ci.yml)
+[![Deploy Web Demo](https://github.com/alejandronguyen1504/Neo-Flood-Filling-Game-/actions/workflows/deploy-web.yml/badge.svg)](https://alejandronguyen1504.github.io/Neo-Flood-Filling-Game-/)
+![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)
+![Pygame](https://img.shields.io/badge/Pygame-2.6.1-20c997)
+![WebAssembly](https://img.shields.io/badge/WebAssembly-pygbag-6366f1)
+![Tests](https://img.shields.io/badge/pytest-79%20passed-22c55e)
 
----
+An interactive **Flood Fill & Pathfinding Algorithm Studio** built in Python & Pygame, compiled to **WebAssembly (`pygbag`)** for zero-install browser play, and paired with a scientific complexity benchmark suite and research notebook.
 
-## What is Flood Fill?
-
-**Flood Fill** is an algorithm that starts from a given cell and spreads outward to fill all connected cells of the same type — similar to how water floods from a single source, or how the **paint bucket tool** works in image editors like Photoshop or MS Paint.
-
----
-
-## What does this project do?
-
-This project researches and implements Flood Fill from scratch in Python, comparing two different approaches:
-
-| | Recursive | Queue-based (BFS) |
-|---|---|---|
-| Traversal | Depth-first (DFS) | Breadth-first (BFS) |
-| Stack overflow risk | ⚠️ Yes | ✅ No |
-| Finds shortest path | ❌ No | ✅ Yes |
-
-Beyond just filling, we extend the BFS approach to **find the shortest path** between two points on a grid — visualized step-by-step in both the console and a Pygame GUI.
-
-### Why Flood Fill for this project?
-
-Flood Fill is a foundational algorithm that bridges simple graph traversal (DFS/BFS) with real visual applications. It is concrete enough to implement from scratch, testable with clear pass/fail criteria, and complex enough to explore meaningful trade-offs such as recursion limits, memory usage, and pathfinding extensions. It also lends itself naturally to visualization, making it ideal for a research project that includes both algorithmic analysis and a working GUI.
+### **[Play Live in Your Browser (WebAssembly Demo)](https://alejandronguyen1504.github.io/Neo-Flood-Filling-Game-/)**
 
 ---
 
-## Project Structure
+## Live Studio Preview
 
-```
-phase2_Pygame.ipynb   ← Main notebook (all code + tests + visualizer)
-README.md             ← This file
-```
-
-The notebook is organized into 7 sections:
-
-| Section | Description |
+| Multi-Color Region Flood Fill (BFS, Scanline, Iterative DFS) | Shortest-Path Comparison (BFS vs A\* on Maze) |
 |---|---|
-| **1. Grid Design** | Core 2D grid data structure and helper functions |
-| **2. Recursive Flood Fill** | Algorithm 1 — DFS-based implementation |
-| **3. Queue-based Flood Fill** | Algorithm 2 — BFS-based implementation |
-| **4. Step-by-step Visualization** | Console animation of BFS exploring and tracing path |
-| **5. Unit Tests** | 44 tests across 7 groups validating both algorithms |
-| **6. Complexity Analysis** | Time O(N) and Space O(N) verified with measurements |
-| **7. Pygame Visualizer** | Interactive GUI with live BFS pathfinding animation |
+| ![Flood Fill Studio Demo](docs/assets/demo_flood_fill.gif) | ![Pathfinding Studio Demo](docs/assets/demo_pathfinding.gif) |
 
 ---
 
-## Section 1 — Grid Design
+## Key Features
 
-The grid is represented as a **2D Python list** where each cell stores an integer:
+### 1. Seven Core Graph & Grid Algorithms (4-Way & 8-Way)
+- **Flood Fill (4 variants):**
+  - **Queue-based BFS** — layer-by-layer wavefront expansion with $O(\sqrt{N})$ peak frontier on open square grids.
+  - **Scanline (Span) Flood Fill** — sweeps maximal horizontal spans and seeds one coordinate per adjacent run, achieving **~6–8x faster runtime** and near-constant frontier size on open regions (supports both 4-way and 8-way diagonal padding).
+  - **Iterative DFS** — explicit stack implementation immune to Python's call-stack recursion ceiling.
+  - **Recursive DFS** — educational baseline with safe `target_color == fill_color` guard and graceful `RecursionError` capture.
+- **Pathfinding (3 variants):**
+  - **A\* Search** — admissible **Manhattan** heuristic (4-way, cost `1.0`) and **Octile** heuristic (8-way, diagonal cost $\sqrt{2}$).
+  - **Breadth-First Search (BFS)** — guaranteed shortest unweighted path by hop count.
+  - **Depth-First Search (DFS)** — non-optimal exploration baseline illustrating why DFS fails shortest-path guarantees.
+- Every algorithm exposes **both** a synchronous API (returning structured `AlgorithmMetrics`) and a step-by-step Python generator (`*_steps` yielding atomic `StepEvent` frames) for non-blocking 60 FPS visualization.
 
-| Value | Constant | Meaning |
-|---|---|---|
-| `0` | `EMPTY` | Passable, unfilled cell |
-| `1` | `WALL` | Impassable barrier |
-| `2` | `FILLED` | Already marked cell |
-
-Six helper functions abstract all grid operations:
-
-| Function | Purpose |
-|---|---|
-| `create_grid(rows, cols)` | Build a fresh grid initialized to `EMPTY` |
-| `print_grid(grid)` | Display the grid in the console |
-| `is_valid_cell(grid, row, col)` | Check if a position is inside the grid |
-| `get_cell(grid, row, col)` | Safely read a cell's value |
-| `set_cell(grid, row, col, value)` | Safely write a value to a cell |
-| `get_grid_size(grid)` | Return `(rows, cols)` dimensions |
-
-> Using `is_valid_cell` as a boundary guard on every read/write prevents index-out-of-range errors — especially important in recursive code.
+### 2. Interactive Algorithm Studio (`1200×720`, Desktop & WebAssembly)
+- **Two-Layer Grid Architecture:** Separates permanent terrain & multi-color Paint Bucket regions (`base`) from transient search visualizations (`overlay`: Frontier, Visited, Path, Start, End) — running or clearing pathfinding never destroys painted regions.
+- **Smooth Interaction:** Click-and-drag wall drawing with **Bresenham line interpolation** (no skipped cells on fast strokes), right-click drag erase, hover coordinates, and 50-step Undo (`Z`).
+- **Color Picker & Contrast Guard:** 12-color Paint Bucket palette + theme customizer (`Wall`, `Path`, `Visited`, `Start`, `End`) with real-time conflict warnings preventing unreadable color pairs.
+- **Playback & Comparison:** 6 speed tiers (`0.5x` → `Max`), Pause/Resume (`SPACE`), Single-Step (`.`), 3 grid presets (`12×16`, `21×31`, `31×47`), 4 map generators (`Multi-Room`, `Maze`, `Obstacles`, `Spiral`), live pure-compute timing HUD, and a **Recent Runs Comparison** table on the same map.
 
 ---
 
-## Section 2 — Recursive Flood Fill
+## Architecture
 
-### What is it?
-The recursive approach implements flood fill by having each cell call the same function on its neighbors — a classic **Depth-First Search (DFS)** pattern.
-
-### How it works:
+```mermaid
+flowchart LR
+    MAIN["main.py (Async Entry: Desktop & pygbag WASM)"] --> VIS["visualizer.py (1200x720 Pygame Renderer)"]
+    MAIN --> CLI["console_demo.py (Step-by-Step CLI)"]
+    VIS --> STATE["studio_state.py (Pure-Python UI State Machine)"]
+    STATE --> GRID["grid.py (Two-Layer Grid & Map Generators)"]
+    STATE --> ALGO["algorithms.py (4 Flood Fill + 3 Pathfinding)"]
+    CLI --> ALGO
+    NB["Neo_Flood_Filling.ipynb"] --> BENCH["benchmarks.py (Time, Space & Heap Suite)"]
+    BENCH --> ALGO
+    TESTS["tests/ (79 pytest cases)"] --> GRID
+    TESTS --> ALGO
+    TESTS --> STATE
+    TESTS --> BENCH
 ```
-1. If the current cell is out of bounds OR doesn't match target_color → STOP
-2. Paint the current cell with fill_color
-3. Recursively call the same function on all 4 neighbors (up, down, left, right)
-```
 
-### Visualization:
+### Repository Structure
+```text
+Neo-Flood-Filling-Game-/
+├── main.py                              # Unified async entry point (Desktop, CLI --console, pygbag WASM)
+├── pyproject.toml                       # Package metadata & pytest configuration
+├── requirements.txt                     # Minimal runtime dependencies (pygame)
+├── requirements-dev.txt                 # Dev, testing, plotting & web build deps
+├── Neo_Flood_Filling.ipynb              # Executed research & matplotlib benchmark notebook
+├── src/neo_flood_fill/
+│   ├── grid.py                          # Two-layer Grid model, palette IDs, undo, Maze/Multi-Room/Spiral generators
+│   ├── algorithms.py                    # Sync & generator Flood Fill (4) and Pathfinding (3) + AlgorithmMetrics
+│   ├── studio_state.py                  # Display-independent Studio controller, Bresenham drag, conflict guard
+│   ├── visualizer.py                    # Async 1200x720 Pygame Studio renderer (Desktop + WASM safe)
+│   ├── benchmarks.py                    # Controlled O(N) runtime, algorithmic space & tracemalloc suite
+│   └── console_demo.py                  # Non-blocking & interactive terminal step-by-step simulation
+├── scripts/
+│   ├── build_web.py                     # Stages pure-Python runtime into a ~31 KB pygbag WASM bundle
+│   └── generate_assets.py               # Reproducibly regenerates GIFs, screenshots & matplotlib charts
+├── tests/                               # 79 pytest unit, equivalence, complexity & headless UI tests
+├── docs/
+│   ├── NCT-NEO-FloodFill.pdf            # Original RMIT NEO Culture Tech project specification
+│   ├── Gantt Chart Flood fill research.pdf
+│   └── assets/                          # Studio GIFs, screenshots & benchmark charts
+└── .github/workflows/
+    ├── ci.yml                           # Automated pytest matrix (Python 3.12 & 3.13) + pygbag build check
+    └── deploy-web.yml                   # Auto-deploys WebAssembly Studio to GitHub Pages on push to main
 ```
-Start at (0,0)        Step 1            Step 2
-. . . .               F . . .           F F . .
-. . . .       →       F . . .    →      F F . .
-. ■ . .               . ■ . .           . ■ . .
-```
-*(F = filled, ■ = wall)*
-
-### Advantages:
-- Very simple and intuitive to read and implement
-- Mirrors the natural recursive definition of "connected region"
-
-### Disadvantages:
-- **Stack overflow risk** — Python's default recursion limit is ~1000 frames. A fully open 32×32 grid (1024 cells) can crash the program with `RecursionError`
-- Follows DFS order — does NOT guarantee shortest path
-- Higher memory overhead per cell (full stack frame per recursive call)
 
 ---
 
-## Section 3 — Queue-based (BFS) Flood Fill
+## Complexity Analysis & Benchmarks
 
-### What is it?
-The queue-based approach replaces the call stack with an explicit `deque`, making the algorithm fully iterative — no recursion, no stack overflow risk. It follows a **Breadth-First Search (BFS)** pattern.
+All measurements below were collected via `src/neo_flood_fill/benchmarks.py` (Python 3.13, 5-run median timings).
 
-### How it works:
-```
-1. Add start cell to queue. Paint it immediately.
-2. While queue is not empty:
-      Take first cell from queue (FIFO)
-      Check all 4 neighbors
-      If neighbor is valid AND matches target_color:
-          Paint it → Add to queue
-3. Queue empty → done
-```
+### Flood Fill Benchmarks (Open Grid, 4-Way)
 
-### Key difference from Recursive (DFS vs BFS):
-BFS expands cells **layer by layer** — all cells at distance 1 first, then distance 2, and so on. This is what allows BFS to guarantee the shortest path.
+| Algorithm | Time | Algorithmic Space (Open $n\times n$) | 20×20 ($N=400$) | 40×40 ($N=1600$) | 60×60 ($N=3600$) | Peak Space at 60×60 |
+|---|---:|---:|---:|---:|---:|---:|
+| **Scanline** | $O(N)$ | $O(1)$ open / $O(N)$ worst | `0.047 ms` | `0.159 ms` | **`0.345 ms`** | **`1` span** |
+| **Queue BFS** | $O(N)$ | $O(\sqrt{N})$ open / $O(N)$ worst | `0.241 ms` | `0.971 ms` | `2.207 ms` | `60` cells |
+| **Iterative DFS** | $O(N)$ | $O(N)$ explicit stack | `0.291 ms` | `1.253 ms` | `2.830 ms` | `3,482` cells |
+| **Recursive DFS** | $O(N)$ | $O(N)$ call stack (overflow risk) | `0.250 ms` | `0.997 ms` | `2.649 ms` | `3,600` frames |
 
-```
-Step 1        Step 2        Step 3
-. . . .       . 1 . .       . 1 2 .
-. S . .  →    . S 1 .  →    . S 1 2
-. . . .       . 1 . .       . 1 2 .
-```
-*(Numbers show which "wave" reached each cell. S = Start)*
+![Flood Fill Benchmarks](docs/assets/benchmark_flood_fill.png)
 
-### Shortest path via Parent Map:
-When each cell is discovered, BFS records which cell it came from:
-```python
-parent[(r, c)] = (previous_row, previous_col)
-```
-Once the end cell is reached, we **backtrack through the parent map** to reconstruct the shortest path:
-```
-End → parent[End] → parent[...] → Start
-Reversed → Start → ... → End  Shortest path!
-```
+> **Engineering Note on CPython Space Measurement:** In v1, measuring space solely with `tracemalloc` produced misleading results where Recursive DFS appeared smaller than BFS (`0.01 KB` vs `1.34 KB`). In CPython 3.11+, interpreter call frames are allocated on a contiguous per-thread frame stack rather than per-call heap allocations tracked by `tracemalloc`. In v2, `benchmarks.py` explicitly separates **algorithmic space** (`peak_recursion_depth` vs `peak_frontier`) from **heap peak (`tracemalloc`)** measured on an isolated pass so tracing overhead never skews wall-clock runtime.
 
-### Advantages:
-- No stack overflow — safe on any grid size
-- Guarantees shortest path (BFS layer-by-layer property)
-- Lower memory per cell (only stores `(row, col)` tuples in queue)
+### Pathfinding Benchmarks (`31×31`, 4-Way)
 
-### Disadvantages:
-- Slightly more code than recursive version
-- Uses extra memory for the `visited` set and `parent` dictionary
+| Terrain | Algorithm | Cells Visited | Peak Frontier | Path Length | Median Time | Optimal? |
+|---|---|---:|---:|---:|---:|:---:|
+| **Open Grid** | **A\* (Manhattan)** | **`61`** | `59` | **`61`** | **`0.153 ms`** | Yes |
+| **Open Grid** | BFS | `961` | `31` | `61` | `1.367 ms` | Yes |
+| **Open Grid** | DFS | `961` | `901` | `961` | `1.889 ms` | No |
+| **Maze** | **A\* (Manhattan)** | **`188`** | `3` | **`157`** | `0.322 ms` | Yes |
+| **Maze** | BFS | `213` | `4` | `157` | `0.310 ms` | Yes |
+| **Maze** | DFS | `441` | `10` | `157` | `0.689 ms` | No (unique path) |
+| **Spiral** | A\* / BFS / DFS | `511` | `1` | `511` | `~0.80 ms` | Forced corridor |
+
+![Pathfinding Benchmarks](docs/assets/benchmark_pathfinding.png)
 
 ---
 
-## Section 4 — Step-by-step Console Visualization
+## Quick Start
 
-The function `flood_fill_queue_steps()` animates the BFS in two phases directly in the console:
-
-**Phase 1 — Search:** BFS explores the grid cell by cell, printing the grid after each discovery. Visited cells are marked with a special color value.
-
-**Phase 2 — Path trace:** Once the end cell is found, the shortest path is traced backward through the parent map and drawn cell by cell from start to end.
-
-```
-Phase 1 (BFS exploring):      Phase 2 (Shortest path):
-2 1 0 0 0                     X 1 0 0 0
-2 0 1 0 0                     X 0 1 0 0
-2 2 0 0 0    →                X X 0 0 0
-0 0 0 0 0                     0 0 X 0 0
-0 0 0 0 E                     0 0 0 X X
-```
-
-The `delay` parameter (in seconds) controls animation speed.
-
----
-
-## Section 5 — Unit Tests
-
-44 tests are organized into 7 groups, run with a shared `run_test(name, condition, fail_msg)` framework that prints `PASS` or `FAIL` for each case.
-
-| Group | Tests | What it checks |
-|---|---|---|
-| Basic Correctness | 7 | Fills correct cells, walls and pre-filled cells untouched, both algorithms produce identical results |
-| Edge Cases | 10 | 1×1 grid, start on wall, `target == fill` bug, already-filled grid |
-| Connectivity | 8 | Wall barriers, L-shaped corridors, corner starting points |
-| Multi-color Grids | 7 | Only `target_color` cells replaced, other colors untouched |
-| Performance | 6 | BFS handles large grids safely, both complete in under 1 second |
-| Time Complexity | 2 | Time scales linearly as N grows (not O(N²)) |
-| Space Complexity | 4 | Stack depth (recursive) and queue peak size (BFS) both grow linearly |
-
-### Known bug documented in tests:
-When `target_color == fill_color`:
-- **Recursive** → infinite recursion → `RecursionError` crash
-- **BFS** → infinite loop → program hangs
-
-Fix: add an early return guard `if target_color == fill_color: return`
-
-### Final result: **41 passed | 3 failed | 44 total**
-The 3 failures are all **known, documented bugs** (the `target == fill` cases above and a memory comparison edge case), not unexpected failures.
-
----
-
-## Section 6 — Complexity Analysis
-
-### Theoretical complexity
-
-Let **N = total number of cells** (rows × cols).
-
-| Algorithm | Time | Space |
-|---|---|---|
-| Recursive Flood Fill | O(N) | O(N) call stack |
-| BFS Flood Fill | O(N) | O(N) queue |
-
-Both visit each cell **at most once** — once painted, a cell no longer matches `target_color` and is never revisited.
-
-### Why recursive uses more memory in practice:
-Although both are O(N) space theoretically, the constant factor differs:
-- **Recursive:** each stack frame stores the full function context — local variables, return address, Python frame overhead (~hundreds of bytes per frame)
-- **BFS:** queue stores only `(row, col)` tuples — 2 integers per cell (~56 bytes per entry)
-
-### How we verify O(N):
-- **Time:** double the grid side length (N quadruples) → measure time also roughly quadruples, not 16× (which would indicate O(N²))
-- **Space recursive:** instrument `flood_fill` to track actual call-stack depth — confirm it grows proportionally with N
-- **Space BFS:** track peak queue length during BFS — confirm it grows proportionally with N
-- **Memory:** use Python's `tracemalloc` to measure actual peak bytes allocated
-
----
-
-## Section 7 — Pygame Visualizer
-
-### What it does:
-An interactive GUI where you can draw walls, place start/end points, and watch BFS explore the grid and trace the shortest path in real time.
-
-### Architecture:
-```
-┌─────────────────────────────────────┐
-│  Event Layer   (keyboard & mouse)   │  ← user input
-├─────────────────────────────────────┤
-│  Logic Layer   (BFS generator)      │  ← algorithm step-by-step
-├─────────────────────────────────────┤
-│  Render Layer  (draw_grid + panel)  │  ← visual output
-└─────────────────────────────────────┘
-```
-
-### Key design: Python Generator for smooth animation
-Running BFS all at once would freeze the display. Instead, `bfs_path_generator` uses Python's `yield` to emit one step at a time:
-```python
-yield ("visit", r, c)    # BFS discovered a new cell
-yield ("path", r, c)     # tracing the shortest path
-yield ("no_path",)       # search exhausted, no route found
-```
-The main loop calls `next(bfs_generator)` once every `BFS_DELAY` milliseconds — smooth animation without blocking the UI.
-
-### Controls:
-
-| Key | Action |
-|---|---|
-| `W` | Draw wall mode |
-| `E` | Erase mode |
-| `S` | Set start cell (green) |
-| `D` | Set end cell (red) |
-| `SPACE` | Run BFS pathfinding |
-| `R` | Reset grid |
-| `ESC` | Quit |
-
-### Color legend:
-
-| Color | Meaning |
-|---|---|
-| 🟢 Green | Start cell |
-| 🔴 Red | End cell |
-| ⬛ Black | Wall |
-| 🔵 Blue | Visited during BFS |
-| 🟡 Yellow | Shortest path |
-
----
-
-## Requirements
-
+### 1. Clone & Install
 ```bash
-pip install pygame
+git clone https://github.com/alejandronguyen1504/Neo-Flood-Filling-Game-.git
+cd Neo-Flood-Filling-Game-
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+pip install --no-deps -e .
+```
+*(Recommended: Python 3.12 or 3.13 for prebuilt `pygame 2.6.1` wheels.)*
+
+### 2. Launch the Interactive Studio
+```bash
+python main.py
 ```
 
-Python 3.x (developed on Python 3.13.9 with Anaconda)
+### 3. Run Console Simulation, Tests & WebAssembly Build
+```bash
+# Non-blocking CLI pathfinding / flood fill demo
+python main.py --console --mode path --algo astar
+python main.py --console --mode fill --algo scanline
+python main.py --console --interactive
+
+# Run the full 79-test pytest suite
+pytest -v
+
+# Build the lightweight (~31 KB APK) WebAssembly bundle locally
+python scripts/build_web.py
+```
+
+### 4. Explore the Research Notebook
+Open [Neo_Flood_Filling.ipynb](Neo_Flood_Filling.ipynb) in JupyterLab or VS Code and run all cells top-to-bottom for interactive algorithm walkthroughs and reproducible `matplotlib` charts.
 
 ---
 
-## How to Run
+## Studio Controls
 
-1. Open `phase2_Pygame.ipynb` in Jupyter Notebook or JupyterLab
-2. Run all cells from top to bottom
-3. The final cell launches the Pygame visualizer in a separate window
-
-> ⚠️ Pygame opens a native OS window — does not work in JupyterHub or Google Colab. Run locally.
+| Input | Action |
+|---|---|
+| `Left Click / Drag` | Apply active tool (`Wall`, `Flood Fill`, `Erase`, `Start`, `End`) |
+| `Right Click / Drag` | Quick erase cells anywhere on the grid |
+| `W` / `F` / `E` / `S` / `D` | Select tool: Wall / Flood Fill / Erase / Start / End |
+| `TAB` | Toggle between **Flood Fill** and **Pathfinding** mode |
+| `K` | Toggle **4-Way** vs **8-Way** connectivity |
+| `SPACE` | Run / Pause / Resume animation |
+| `.` (Period) | Single-step animation while paused |
+| `-` / `+` | Decrease / increase animation speed |
+| `Z` / `X` / `R` / `C` | Undo / Clear fill or search overlay / Reset grid / Reset colors |
+| `ESC` | Quit (Desktop) or stop active animation (Web) |
 
 ---
 
-## Conclusion
+## Project Evolution & Contributions
 
-| | Recursive | BFS |
-|---|---|---|
-| Correctness | ✅ Small grids | ✅ All sizes |
-| Time complexity | O(N) | O(N) |
-| Space complexity | O(N) — heavier per cell | O(N) — lighter per cell |
-| Stack overflow risk | ⚠️ Yes | ✅ No |
-| Shortest path | ❌ No | ✅ Yes |
-| Code simplicity | ✅ Very simple | Slightly more verbose |
-
-**Key takeaway:** Both algorithms are O(N), but BFS is safer, more memory-efficient in practice, and capable of shortest-path reconstruction — making it the better choice for production use and pathfinding applications.
+- **v1 — Original Research Foundation (RMIT NEO Culture Tech):** Initiated as a 3-phase club research project ([spec](docs/NCT-NEO-FloodFill.pdf), [Gantt chart](docs/Gantt%20Chart%20Flood%20fill%20research.pdf)) implementing baseline recursive & queue-based flood fill, console step-by-step output, and an initial Pygame prototype in a shared Jupyter Notebook.
+- **v2 — Independent Re-Architecture & Interactive Studio (`Quoc Anh Ngo Nguyen` / [@alejandronguyen1504](https://github.com/alejandronguyen1504)):**
+  - Refactored the monolithic notebook into a modular Python package (`src/neo_flood_fill/`) with a two-layer grid model and decoupled UI state machine (`StudioState`).
+  - Added Iterative DFS, 4/8-way Scanline Flood Fill, DFS & A\* (Manhattan/Octile) pathfinding, deterministic Maze/Multi-Room/Spiral generators, and fixed the `target_color == fill_color` infinite-loop bug and `tracemalloc` space-benchmarking flaw.
+  - Built the `1200×720` async Pygame Interactive Algorithm Studio (true multi-color Paint Bucket Flood Fill, Bresenham drag painting, color-conflict guard, speed slider, single-step playback, live HUD, and Recent Runs comparison).
+  - Engineered a 79-test `pytest` suite, reproducible `matplotlib` benchmark charts, GitHub Actions CI, and automated `pygbag` WebAssembly deployment to GitHub Pages.
